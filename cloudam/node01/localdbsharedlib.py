@@ -157,7 +157,7 @@ def select_all_data():
         row_dict[col[0]] = row[i]
       answer.append(row_dict)
   except Exception as e:
-    logging.info(e, flush=True)
+    logging.info(e)
     return None
   finally:
     conn.commit()
