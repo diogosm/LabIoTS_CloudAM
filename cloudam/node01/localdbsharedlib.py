@@ -10,10 +10,13 @@ Original file is located at
 import sqlite3
 import time
 
+import logging
+
 '''
   @TODO 
     - verificar se dtype é válido
 '''
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def create_table():
   conn = sqlite3.connect('data.db')
@@ -60,7 +63,7 @@ def insert(device_name, dtype, valor):
   try: 
    curs.execute(f"INSERT INTO DATA (END_DEVICE_NAME, DTYPE, VALUE, DATE_CREATED,FIREBASE_SYNC) VALUES ('{device_name}', '{dtype}', {valor}, datetime('now'), FALSE)" ) 
   except Exception as e:
-    print("Error insert ${e}", flush=True)
+    logging.info("Error insert ${e}")
     conn.rollback()
   finally:
     conn.commit()
@@ -101,7 +104,7 @@ def returnDadosNotSYNC():
     curs.execute(query)
 
     results = curs.fetchall()
-    print(results)
+    logging.info(results)
 
     for row in results:
       row_dict = {}
@@ -154,7 +157,7 @@ def select_all_data():
         row_dict[col[0]] = row[i]
       answer.append(row_dict)
   except Exception as e:
-    print(e, flush=True)
+    logging.info(e, flush=True)
     return None
   finally:
     conn.commit()
