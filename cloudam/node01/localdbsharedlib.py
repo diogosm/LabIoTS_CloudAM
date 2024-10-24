@@ -44,7 +44,7 @@ def dropa_table():
   try:
     curs.execute("BEGIN") #COMEÇO DO TRANSACIONAL 
     curs.execute("""
-      DROP TABLE data;
+      DROP TABLE IF EXISTS DATA;
     """)
     conn.commit()
   except Exception as e:
@@ -58,10 +58,12 @@ def insert(device_name, dtype, valor):
   curs = conn.cursor()
 
   try: 
-   curs.execute(f"INSERT INTO data (END_DEVICE_NAME, DTYPE, VALUE, DATE_CREATED,FIREBASE_SYNC) VALUES ('{device_name}', '{dtype}', {valor}, datetime('now'), FALSE)" )  
+   curs.execute(f"INSERT INTO DATA (END_DEVICE_NAME, DTYPE, VALUE, DATE_CREATED,FIREBASE_SYNC) VALUES ('{device_name}', '{dtype}', {valor}, datetime('now'), FALSE)" ) 
   except Exception as e:
-    conn.commit()
+    print("Error insert ${e.message}", flush=True)
+    conn.rollback()
   finally:
+    conn.commit()
     conn.close()
   ## @TODO return true ou false
   return curs.lastrowid
@@ -95,7 +97,7 @@ def returnDadosNotSYNC():
   result_dict = []
 
   try:
-    query = f"SELECT * FROM data WHERE FIREBASE_SYNC = FALSE"
+    query = f"SELECT * FROM DATA WHERE FIREBASE_SYNC = FALSE"
     curs.execute(query)
 
     results = curs.fetchall()
@@ -143,15 +145,16 @@ def select_all_data():
   ans = []
 
   try:
-    query = f"SELECT * FROM data"
+    query = f"SELECT * FROM DATA"
     curs.execute(query)
     ans = curs.fetchall()
     for row in ans:
       row_dict = {}
-        for i, col in enumerate(curs.description):
-          row_dict[col[0]] = row[i]
-        ans.append(row_dict)
+      for i, col in enumerate(curs.description):
+        row_dict[col[0]] = row[i]
+      ans.append(row_dict)
   except Exception as e:
+    print(e.message, flush=True)
     return None
   finally:
     conn.commit()

@@ -9,7 +9,7 @@ import logging
 load_dotenv()
 
 # Firebase Admin
-cred = credentials.Certificate('XXX.json')
+cred = credentials.Certificate('testemonit-b47a7-a661a9bda465.json')
 #app = firebase_admin.initialize_app(cred, name="teste")
 app = firebase_admin.initialize_app(cred)
 db = firestore.client()

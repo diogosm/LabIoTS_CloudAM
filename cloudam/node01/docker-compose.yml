@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   node01:
-    build: .
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: node01
@@ -20,7 +20,7 @@ services:
       - localdb 
 
   localdb:
-    build: .
+    build:
       context: .
       dockerfile: Dockerfile_localdb
     container_name: localdb
