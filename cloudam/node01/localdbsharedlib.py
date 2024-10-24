@@ -60,7 +60,7 @@ def insert(device_name, dtype, valor):
   try: 
    curs.execute(f"INSERT INTO DATA (END_DEVICE_NAME, DTYPE, VALUE, DATE_CREATED,FIREBASE_SYNC) VALUES ('{device_name}', '{dtype}', {valor}, datetime('now'), FALSE)" ) 
   except Exception as e:
-    print("Error insert ${e.message}", flush=True)
+    print("Error insert ${e}", flush=True)
     conn.rollback()
   finally:
     conn.commit()
@@ -142,7 +142,7 @@ def atualizaTrue(id_data):
 def select_all_data():
   conn = sqlite3.connect('data.db')
   curs = conn.cursor()
-  ans = []
+  answer = []
 
   try:
     query = f"SELECT * FROM DATA"
@@ -152,13 +152,13 @@ def select_all_data():
       row_dict = {}
       for i, col in enumerate(curs.description):
         row_dict[col[0]] = row[i]
-      ans.append(row_dict)
+      answer.append(row_dict)
   except Exception as e:
-    print(e.message, flush=True)
+    print(e, flush=True)
     return None
   finally:
     conn.commit()
     conn.close()
-  return ans
+  return answer
 
 
