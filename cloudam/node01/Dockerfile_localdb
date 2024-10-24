@@ -1,0 +1,16 @@
+FROM python:3.9-slim
+
+WORKDIR /app_localdb
+
+COPY requirements_localdb.txt .
+RUN pip install --no-cache-dir -r requirements_localdb.txt
+
+COPY localdb.py .
+COPY .env .
+
+EXPOSE 5001
+
+ENV NODE_ID=${NODE_ID}
+ENV NAME=${NAME}
+
+CMD ["python", "localdb.py"]

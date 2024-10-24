@@ -1,0 +1,4 @@
+firebase-admin
+python-dotenv
+sqlite3
+requests

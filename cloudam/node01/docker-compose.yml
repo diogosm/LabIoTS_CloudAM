@@ -3,6 +3,8 @@ version: '3.8'
 services:
   node01:
     build: .
+      context: .
+      dockerfile: Dockerfile
     container_name: node01
     env_file:
       - .env
@@ -14,4 +16,17 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    depends_on:
+      - localdb 
 
+  localdb:
+    build: .
+      context: .
+      dockerfile: Dockerfile_localdb
+    container_name: localdb
+    env_file:
+      - .env
+    volumes:
+      - .:/app_localdb
+    restart: unless-stopped
+ 
