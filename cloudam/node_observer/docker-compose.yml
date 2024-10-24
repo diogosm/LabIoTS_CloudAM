@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  nobe_observer:
+    build:
+      context: .
+      dockerfile: Dockerfile_observer
+    container_name: nobe_observer
+    env_file:
+      - .env
+    volumes:
+      - .:/app_observer
+    restart: unless-stopped
+ 

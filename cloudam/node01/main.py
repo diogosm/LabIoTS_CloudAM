@@ -4,6 +4,7 @@ from time import sleep
 import os
 from dotenv import load_dotenv
 import logging
+import sentry_sdk
 
 # .env variables
 load_dotenv()
@@ -18,6 +19,19 @@ NODE_ID = os.getenv('NODE_ID')
 NAME = os.getenv('NAME')
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+sentry_sdk.init(
+    dsn="https://fd0e33d2043ff6bb5f4a2b8aac860567@o4508179211550720.ingest.us.sentry.io/4508179262406656",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    _experiments={
+        # Set continuous_profiling_auto_start to True
+        # to automatically start the profiler on when
+        # possible.
+        "continuous_profiling_auto_start": True,
+    },
+)
 
 def send_data():
     try:
@@ -87,10 +101,11 @@ def send_data():
             'last_updated': firestore.SERVER_TIMESTAMP
         })
         logging.info(f"Temperature data sent for device {NODE_ID}")
+        sentry_sdk.capture_message( f"Temperature data sent for device {NODE_ID}" )
 
     except Exception as e:
+        sentry_sdk.capture_exception(e)
         logging.error(f"Error sending data: {str(e)}")
-
 
 if __name__ == "__main__":
     while True:
