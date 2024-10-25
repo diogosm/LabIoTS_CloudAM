@@ -3,7 +3,9 @@ from firebase_admin import credentials, firestore
 from time import sleep
 import os
 from dotenv import load_dotenv
-import logging
+import logging, sys
+import sqlite3
+from localdbsharedlib import returnDadosNotSYNC, atualizaTrue
 import sentry_sdk
 import subprocess
 import socket
@@ -20,7 +22,7 @@ db = firestore.client()
 NODE_ID = os.getenv('NODE_ID')
 NAME = os.getenv('NAME')
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', force=True, handlers=[logging.StreamHandler(sys.stdout)])
 
 sentry_sdk.init(
     dsn="https://fd0e33d2043ff6bb5f4a2b8aac860567@o4508179211550720.ingest.us.sentry.io/4508179262406656",
@@ -85,25 +87,50 @@ def send_data():
                 logging.info(f"Created new data_type: {data_type}")
 
         # Envia dados
-        logging.info(f"try to send new data...")
-        dados_collection = db.collection('data')
+        # o core desse codigo
+        # esse embaixo eh um exemplo estático
+        # logging.info(f"try to send new data...")
+        # dados_collection = db.collection('data')
 
-        dados_collection.document().set({
-            'valor': 7.0,
-            'tipo_dados_id': data_types_ids['pH'],
-            'device_id': NODE_ID,
-            'last_updated': firestore.SERVER_TIMESTAMP
-        })
-        logging.info(f"pH data sent for device {NODE_ID}")
+        # dados_collection.document().set({
+        #     'valor': 7.0,
+        #     'tipo_dados_id': data_types_ids['pH'],
+        #     'device_id': NODE_ID,
+        #     'last_updated': firestore.SERVER_TIMESTAMP
+        # })
+        # logging.info(f"pH data sent for device {NODE_ID}")
 
-        dados_collection.document().set({
-            'valor': 39.0,
-            'tipo_dados_id': data_types_ids['Temperatura'],
-            'device_id': NODE_ID,
-            'last_updated': firestore.SERVER_TIMESTAMP
-        })
-        logging.info(f"Temperature data sent for device {NODE_ID}")
-        sentry_sdk.capture_message( f"Temperature data sent for device {NODE_ID}" )
+        # dados_collection.document().set({
+        #     'valor': 39.0,
+        #     'tipo_dados_id': data_types_ids['Temperatura'],
+        #     'device_id': NODE_ID,
+        #     'last_updated': firestore.SERVER_TIMESTAMP
+        # })
+        # logging.info(f"Temperature data sent for device {NODE_ID}")
+        # sentry_sdk.capture_message( f"Temperature data sent for device {NODE_ID}" )
+
+        unsynced_data = returnDadosNotSYNC()
+        logging.info(f"Found {len(unsynced_data)} dados não sincronizados...")
+
+        for row in unsynced_data:
+            try:
+                dados_collection = db.collection('data')
+
+                # entrada do Firestore
+                dados_collection.document().set({
+                    'valor': row['VALUE'],
+                    'tipo_dados_id': data_types_ids[row['DTYPE']],
+                    'device_id': NODE_ID,
+                    'last_updated': firestore.SERVER_TIMESTAMP
+                })
+                logging.info(f"{row['DTYPE']} data sent for device {NODE_ID}, value: {row['VALUE']}")
+
+                # Update data as synced in SQLite
+                atualizaTrue(row['ID_DATA'])
+                logging.info(f"row['ID_DATA'] was updated on local storage")
+
+            except Exception as e:
+                logging.error(f"Error sending {row['DTYPE']} data: {str(e)}")
 
     except Exception as e:
         sentry_sdk.capture_exception(e)
@@ -131,6 +158,7 @@ def run_iperf_client(server_ip):
     with open(output_file, "a") as f:
         f.write(result.stdout)  # Append the iperf output to the file
 
+cont = 1
 if __name__ == "__main__":
 
     # Start iperf server in a separate process
@@ -140,6 +168,11 @@ if __name__ == "__main__":
     server_ip = get_server_ip()
 
     while True:
+        logging.info(f"[SDS SERVICE] Initiating SDS service procedures, count wake up = {cont}")
         send_data()
         run_iperf_client(server_ip)  # Call the client function
-        sleep(30)
+        cont += 1
+
+        logging.info(f"[SDS SERVICE] sleeping for some seconds")
+        sleep(20)
+

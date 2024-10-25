@@ -131,13 +131,15 @@ def atualizaTrue(id_data):
   curs = conn.cursor()
 
   try:
+    curs.execute("BEGIN") 
     query = f"UPDATE DATA SET FIREBASE_SYNC = TRUE WHERE id_data = {id_data}"
     curs.execute(query)
   except Exception as e:
     conn.rollback()
     return False
-  finally:
+  else:
     conn.commit()
+  finally:
     conn.close()
   return True
 
