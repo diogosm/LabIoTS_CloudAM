@@ -16,17 +16,13 @@ ENV NAME=${NAME}
 MAINTAINER LABIOTS/UFAM
 
 RUN sed 's/archive.ubuntu.com/mirror.ufam.edu.br/g' -i /etc/apt/sources.list; \
-	sed 's/security.ubuntu.com/mirror.ufam.edu.br/g' -i /etc/apt/sources.list; \
-	apt-get update && apt-get install -y --no-install-recommends cron; \
+    sed 's/security.ubuntu.com/mirror.ufam.edu.br/g' -i /etc/apt/sources.list; \
+    apt-get update && apt-get install -y --no-install-recommends cron; \
     ln -fs /usr/share/zoneinfo/America/Manaus /etc/localtime; \
     echo "America/Manaus" > /etc/timezone; \
-    dpkg-reconfigure -f noninteractive tzdata;
-
-RUN apt-get update \
-	&& DEBIAN_FRONTEND=noninteractive; \
-	apt-get install -y iproute2 iputils-ping; \
+    dpkg-reconfigure -f noninteractive tzdata; \
+    apt-get install -y iproute2 iputils-ping iperf3; \
     apt-get clean;
-
 
 CMD ["python", "main.py"]
 

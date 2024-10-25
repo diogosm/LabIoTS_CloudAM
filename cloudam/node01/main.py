@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import logging
 import sentry_sdk
+import subprocess
+import socket
 
 # .env variables
 load_dotenv()
@@ -107,7 +109,37 @@ def send_data():
         sentry_sdk.capture_exception(e)
         logging.error(f"Error sending data: {str(e)}")
 
+def get_server_ip():
+    # Get the local machine name
+    host_name = socket.gethostname()
+    # Get the IP address of the machine
+    server_ip = socket.gethostbyname(host_name)
+    return server_ip
+
+def run_iperf_server():
+    logging.info("Starting iperf3 server...")
+    subprocess.Popen(["iperf3", "-s"])
+
+def run_iperf_client(server_ip):
+    logging.info(f"Running iperf3 client to connect to {server_ip}...")
+    result = subprocess.run(["iperf3", "-c", server_ip, "-t", "10"], capture_output=True, text=True)
+
+    # Define the output file path
+    output_file = "iperf_results.txt"
+
+    # Write the output to the file in append mode
+    with open(output_file, "a") as f:
+        f.write(result.stdout)  # Append the iperf output to the file
+
 if __name__ == "__main__":
+
+    # Start iperf server in a separate process
+    run_iperf_server()
+
+    # Get the server IP dynamically
+    server_ip = get_server_ip()
+
     while True:
         send_data()
+        run_iperf_client(server_ip)  # Call the client function
         sleep(30)
